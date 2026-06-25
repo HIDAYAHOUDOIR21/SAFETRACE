@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AnnonceController;
 use App\Http\Controllers\TemoignageController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +34,11 @@ Route::delete('/annonces/{annonce_id}/temoignages/{temoignage_id}', [TemoignageC
 Route::get('/admin', [AdminController::class, 'index'])->middleware('auth');
 Route::post('/admin/annonces/{id}/valider', [AdminController::class, 'valider'])->middleware('auth');
 Route::post('/admin/annonces/{id}/refuser', [AdminController::class, 'refuser'])->middleware('auth');
+
+Route::get('/messages', [MessageController::class, 'index'])->middleware('auth');
+Route::get('/messages/create/{user_id}/{annonce_id?}', [MessageController::class, 'create'])->middleware('auth');
+Route::post('/messages', [MessageController::class, 'store'])->middleware('auth');
+Route::post('/messages/{id}/lu', [MessageController::class, 'marquerLu'])->middleware('auth');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
