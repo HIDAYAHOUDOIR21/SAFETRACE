@@ -30,6 +30,7 @@
             <a href="/carte" class="text-gray-600 font-medium hover:text-teal-700">Carte</a>
             @auth
             <a href="/mes-annonces" class="text-gray-600 font-medium hover:text-teal-700">Mon tableau de bord</a>
+            <a href="/messages" class="text-gray-600 font-medium hover:text-teal-700">Messagerie</a>
             @endauth
         </div>
         <div class="flex gap-3 items-center">
@@ -52,10 +53,18 @@
 
             <div class="bg-white rounded-2xl shadow-lg p-8">
 
+                <!-- HEADER -->
                 <div class="flex justify-between items-start mb-8">
                     <div>
                         <h1 class="text-3xl font-bold mb-2" style="color: #004d40">{{ $annonce->prenom_personne }} {{ $annonce->nom_personne }}</h1>
-                        <span class="bg-red-100 text-red-600 text-sm px-4 py-1 rounded-full font-medium">{{ ucfirst($annonce->statut) }}</span>
+                        <span class="text-sm px-4 py-1 rounded-full font-medium
+                            @if($annonce->statut == 'en_cours') bg-red-100 text-red-600
+                            @elseif($annonce->statut == 'retrouve_vivant') bg-green-100 text-green-600
+                            @else bg-gray-100 text-gray-600 @endif">
+                            @if($annonce->statut == 'en_cours') 🔴 En cours
+                            @elseif($annonce->statut == 'retrouve_vivant') ✅ Retrouvée
+                            @else Archivée @endif
+                        </span>
                     </div>
                     @auth
                         @if(Auth::id() == $annonce->user_id)
@@ -77,12 +86,14 @@
                     @endauth
                 </div>
 
+                <!-- PHOTO -->
                 @if($annonce->photos->first())
                 <div class="mb-8">
                     <img src="{{ Storage::url($annonce->photos->first()->url_photo) }}" class="w-72 h-72 object-cover rounded-2xl shadow-md">
                 </div>
                 @endif
 
+                <!-- INFORMATIONS -->
                 <div class="grid grid-cols-2 gap-8 mb-8">
                     <div class="bg-gray-50 rounded-2xl p-6">
                         <h2 class="font-bold mb-4 text-lg" style="color: #004d40">👤 Informations personnelles</h2>
@@ -101,6 +112,7 @@
                     </div>
                 </div>
 
+                <!-- DESCRIPTION -->
                 <div class="bg-gray-50 rounded-2xl p-6 mb-6">
                     <h2 class="font-bold mb-3 text-lg" style="color: #004d40">📝 Description physique</h2>
                     <p class="text-gray-600">{{ $annonce->description_physique }}</p>
@@ -113,6 +125,7 @@
                 </div>
                 @endif
 
+                <!-- BOUTON TEMOIGNAGE -->
                 <div class="border-t pt-6 mb-6">
                     <h2 class="font-bold mb-4 text-lg" style="color: #004d40">💬 Vous avez vu cette personne ?</h2>
                     <a href="/annonces/{{ $annonce->id }}/temoignages/create" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition">
@@ -120,6 +133,7 @@
                     </a>
                 </div>
 
+                <!-- LISTE TEMOIGNAGES -->
                 <div class="border-t pt-6 mb-6">
                     <h2 class="font-bold mb-4 text-lg" style="color: #004d40">Témoignages ({{ $annonce->temoignages->count() }})</h2>
                     @forelse($annonce->temoignages as $temoignage)
@@ -128,11 +142,16 @@
                         <p class="text-gray-500 text-sm">📍 {{ $temoignage->localisation_vue }}</p>
                         <p class="text-gray-500 text-sm">📅 {{ \Carbon\Carbon::parse($temoignage->date_observation)->format('d/m/Y') }}</p>
                         @auth
+                        @if($temoignage->user_id && $temoignage->user_id != Auth::id())
+                        <a href="/messages/create/{{ $temoignage->user_id }}/{{ $annonce->id }}" class="inline-block mt-2 text-white px-3 py-1 rounded-lg text-xs font-medium" style="background: linear-gradient(135deg, #00897b, #0097a7)">
+                            ✉️ Contacter ce témoin
+                        </a>
+                        @endif
                         @if(Auth::id() == $annonce->user_id)
                         <form method="POST" action="/annonces/{{ $annonce->id }}/temoignages/{{ $temoignage->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" onclick="return confirm('Supprimer ce témoignage ?')" class="text-red-500 text-xs hover:underline mt-2">🗑️ Supprimer</button>
+                            <button type="submit" onclick="return confirm('Supprimer ce témoignage ?')" class="text-red-500 text-xs hover:underline mt-2 block">🗑️ Supprimer</button>
                         </form>
                         @endif
                         @endauth
@@ -142,6 +161,7 @@
                     @endforelse
                 </div>
 
+                <!-- CORRESPONDANCES -->
                 @if($annonce->correspondances->count() > 0)
                 <div class="border-t pt-6 mb-6">
                     <h2 class="font-bold mb-4 text-lg" style="color: #004d40">🔍 Correspondances détectées ({{ $annonce->correspondances->count() }})</h2>
@@ -150,7 +170,7 @@
                     <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-3">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-bold text-yellow-800">Score : {{ $correspondance->score_similarite }}/100</span>
-                            <span class="bg-yellow-200 text-yellow-800 text-xs px-3 py-1 rounded-full">{{ ucfirst($correspondance->statut) }}</span>
+                            <span class="bg-yellow-200 text-yellow-800 text-xs px-3 py-1 rounded-full">En attente</span>
                         </div>
                         <p class="text-gray-700 text-sm">{{ $correspondance->temoignage->contenu }}</p>
                         <p class="text-gray-500 text-sm">📍 {{ $correspondance->temoignage->localisation_vue }}</p>
@@ -161,6 +181,7 @@
                 </div>
                 @endif
 
+                <!-- PARTAGE -->
                 <div class="border-t pt-6">
                     <h2 class="font-bold mb-4 text-lg" style="color: #004d40">📢 Partager cette annonce</h2>
                     <div class="flex gap-3">
