@@ -19,3 +19,9 @@ jobs:
         php-version: '8.4'
     - name: Install dependencies
       run: composer install --no-interaction --prefer-dist
+    - name: Prepare Laravel
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+    - name: Run unit tests
+      run: php artisan test
